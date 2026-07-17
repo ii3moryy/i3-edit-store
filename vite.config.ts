@@ -4,7 +4,6 @@ import tailwindcss from "@tailwindcss/vite";
 import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
-  base: "/i3-edit-store/",
   plugins: [react(), tailwindcss(), tsconfigPaths()],
   build: {
     outDir: "dist",
