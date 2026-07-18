@@ -1,93 +1,91 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import type { AuthChangeEvent, Session, User } from "@supabase/supabase-js";
-import { supabase } from "@/integrations/supabase/client";
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
-type AuthCtx = {
+interface User {
+  id: string;
+  email: string;
+  name?: string;
+}
+
+interface AuthContextType {
   user: User | null;
-  session: Session | null;
   isAdmin: boolean;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<{ error: string | null }>;
-  signUp: (email: string, password: string) => Promise<{ error: string | null }>;
-  signOut: () => Promise<void>;
-};
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => void;
+  signup: (email: string, password: string, name: string) => Promise<void>;
+}
 
-const Ctx = createContext<AuthCtx | undefined>(undefined);
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_evt: AuthChangeEvent, s: Session | null) => {
-      setSession(s);
-      setUser(s?.user ?? null);
-      if (s?.user) {
-        setTimeout(() => {
-          supabase
-            .from("user_roles" as any)
-            .select("role")
-            .eq("user_id", s.user.id)
-            .eq("role", "admin")
-            .maybeSingle()
-            .then((result) => setIsAdmin(!!result.data && !result.error));
-        }, 0);
-      } else {
-        setIsAdmin(false);
-      }
-    });
-
-    supabase.auth.getSession().then(({ data: { session: s } }: { data: { session: Session | null } }) => {
-      setSession(s);
-      setUser(s?.user ?? null);
-      if (s?.user) {
-        supabase
-          .from("user_roles" as any)
-          .select("role")
-          .eq("user_id", s.user.id)
-          .eq("role", "admin")
-          .maybeSingle()
-            .then((result) => {
-              setIsAdmin(!!result.data && !result.error);
-            setLoading(false);
-          });
-      } else {
+    const checkAuth = async () => {
+      try {
+        const savedUser = localStorage.getItem('user');
+        if (savedUser) {
+          setUser(JSON.parse(savedUser));
+        }
+      } catch (error) {
+        console.error('Auth check failed:', error);
+      } finally {
         setLoading(false);
       }
-    });
+    };
 
-    return () => subscription.unsubscribe();
+    checkAuth();
   }, []);
 
-  const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    return { error: error?.message ?? null };
+  const login = async (email: string, password: string) => {
+    setLoading(true);
+    try {
+      const mockUser: User = {
+        id: '1',
+        email,
+        name: email.split('@')[0],
+      };
+      setUser(mockUser);
+      localStorage.setItem('user', JSON.stringify(mockUser));
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const signUp = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { emailRedirectTo: `${window.location.origin}/admin` },
-    });
-    return { error: error?.message ?? null };
+  const logout = () => {
+    setUser(null);
+    localStorage.removeItem('user');
   };
 
-  const signOut = async () => {
-    await supabase.auth.signOut();
+  const signup = async (email: string, password: string, name: string) => {
+    setLoading(true);
+    try {
+      const mockUser: User = {
+        id: '1',
+        email,
+        name,
+      };
+      setUser(mockUser);
+      localStorage.setItem('user', JSON.stringify(mockUser));
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const isAdmin = user?.email?.endsWith('@admin.i3store.com') ?? false;
 
   return (
-    <Ctx.Provider value={{ user, session, isAdmin, loading, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ user, isAdmin, loading, login, logout, signup }}>
       {children}
-    </Ctx.Provider>
+    </AuthContext.Provider>
   );
 }
 
 export function useAuth() {
-  const v = useContext(Ctx);
-  if (!v) throw new Error("useAuth must be used within AuthProvider");
-  return v;
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within AuthProvider');
+  }
+  return context;
 }

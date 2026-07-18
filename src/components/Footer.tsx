@@ -1,14 +1,9 @@
-import { useI18n } from "@/lib/i18n";
-
 export function Footer() {
-  const { t } = useI18n();
   return (
-    <footer className="border-t border-border/50 mt-20">
-      <div className="container mx-auto py-6 px-4 flex flex-wrap items-center justify-between gap-4 text-sm text-muted-foreground">
-        <div>{t("footer.rights")}</div>
-        <div className="flex items-center gap-2">
-          <div className="bg-primary text-primary-foreground rounded-md w-7 h-7 grid place-items-center font-bold text-xs">i3</div>
-          <span>i3 Store</span>
+    <footer className="border-t border-border bg-card/50 backdrop-blur-sm mt-12">
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center text-muted-foreground">
+          <p>&copy; 2024 i3 Store. All rights reserved.</p>
         </div>
       </div>
     </footer>

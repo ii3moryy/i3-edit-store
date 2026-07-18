@@ -3,7 +3,7 @@ import { useI18n, type Lang } from "@/lib/i18n";
 
 export function LanguageGate({ children }: { children: React.ReactNode }) {
   const { setLang } = useI18n();
-  const [chosen, setChosen] = useState(true);
+  const [chosen, setChosen] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem("lang");

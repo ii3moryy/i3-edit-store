@@ -1,75 +1,100 @@
 import { useState } from "react";
-import { Navigate, useNavigate } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth";
 import { useI18n } from "@/lib/i18n";
+import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 
 export default function AuthPage() {
-  const { t } = useI18n();
-  const { user, loading, signIn, signUp } = useAuth();
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const { lang } = useI18n();
+  const { login, signup } = useAuth();
+  const navigate = useNavigate();
+  const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [err, setErr] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
-  const nav = useNavigate();
+  const [name, setName] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  if (!loading && user) return <Navigate to="/admin" replace />;
-
-  const submit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setErr(null);
-    setBusy(true);
-    const fn = mode === "signin" ? signIn : signUp;
-    const { error } = await fn(email, password);
-    setBusy(false);
-    if (error) setErr(error);
-    else if (mode === "signup") setErr(t("auth.verifyEmail"));
-    else nav("/admin");
+    setLoading(true);
+    try {
+      if (isLogin) {
+        await login(email, password);
+      } else {
+        await signup(email, password, name);
+      }
+      navigate("/");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="container mx-auto px-4 py-16 max-w-md">
-      <div className="bg-card border border-border rounded-2xl p-6">
-        <h1 className="text-2xl font-bold text-center">
-          {mode === "signin" ? t("auth.signin") : t("auth.signup")}
+    <div className="container mx-auto px-4 py-20">
+      <div className="max-w-md mx-auto bg-card p-8 rounded-2xl border border-border">
+        <h1 className="text-2xl font-extrabold text-center mb-6">
+          {isLogin ? (lang === "en" ? "Login" : "تسجيل الدخول") : lang === "en" ? "Sign Up" : "إنشاء حساب"}
         </h1>
-        <p className="text-center text-muted-foreground text-sm mt-1">
-          {mode === "signup" ? t("auth.signupNote") : t("auth.signinNote")}
-        </p>
 
-        <form onSubmit={submit} className="mt-6 space-y-3">
-          <input
-            required
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder={t("auth.email")}
-            className="w-full bg-input/40 border border-border rounded-xl px-4 py-3 focus:outline-none focus:border-primary"
-          />
-          <input
-            required
-            type="password"
-            minLength={6}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder={t("auth.password")}
-            className="w-full bg-input/40 border border-border rounded-xl px-4 py-3 focus:outline-none focus:border-primary"
-          />
-          {err && <p className="text-sm text-destructive text-end">{err}</p>}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {!isLogin && (
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                {lang === "en" ? "Name" : "الاسم"}
+              </label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full px-4 py-2 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                required
+              />
+            </div>
+          )}
+
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              {lang === "en" ? "Email" : "البريد الإلكتروني"}
+            </label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-4 py-2 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              {lang === "en" ? "Password" : "كلمة المرور"}
+            </label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full px-4 py-2 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              required
+            />
+          </div>
+
           <button
-            disabled={busy}
-            className="w-full bg-primary text-primary-foreground py-3 rounded-xl font-semibold disabled:opacity-60"
+            type="submit"
+            disabled={loading}
+            className="w-full py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition font-semibold disabled:opacity-50"
           >
-            {busy ? "..." : mode === "signin" ? t("auth.login") : t("auth.createAccount")}
+            {loading ? "..." : isLogin ? "Login" : "Sign Up"}
           </button>
         </form>
 
-        <button
-          onClick={() => { setMode(mode === "signin" ? "signup" : "signin"); setErr(null); }}
-          className="w-full mt-4 text-sm text-muted-foreground hover:text-primary"
-        >
-          {mode === "signin" ? t("auth.noAccount") : t("auth.hasAccount")}
-        </button>
+        <p className="text-center text-muted-foreground mt-6">
+          {isLogin ? lang === "en" ? "Don't have an account?" : "ليس لديك حساب؟" : lang === "en" ? "Already have an account?" : "هل لديك حساب بالفعل؟"}
+          <button
+            onClick={() => setIsLogin(!isLogin)}
+            className="ml-2 text-primary hover:underline font-semibold"
+          >
+            {isLogin ? "Sign Up" : "Login"}
+          </button>
+        </p>
       </div>
     </div>
   );
