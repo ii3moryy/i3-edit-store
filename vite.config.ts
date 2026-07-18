@@ -7,9 +7,9 @@ export default defineConfig({
   plugins: [react(), tailwindcss(), tsconfigPaths()],
   build: {
     outDir: "dist",
-    sourcemap: true,
+    sourcemap: false,
   },
   server: {
-    open: true,
+    port: 5173,
   },
 });
