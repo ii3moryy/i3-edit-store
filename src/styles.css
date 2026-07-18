@@ -1,4 +1,7 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 @import "tw-animate-css";
 
 :root {
@@ -10,7 +13,7 @@
   --card-foreground: oklch(0.98 0.005 260);
   --popover: oklch(0.22 0.035 260);
   --popover-foreground: oklch(0.98 0.005 260);
-  --primary: oklch(0.628 0.258 29.23); /* #ff0000 */
+  --primary: oklch(0.628 0.258 29.23);
   --primary-foreground: oklch(0.99 0.005 260);
   --secondary: oklch(0.28 0.04 260);
   --secondary-foreground: oklch(0.98 0.005 260);
@@ -45,12 +48,6 @@
   }
 
   * {
-    border-color: var(--color-border);
-  }
-}
-
-@layer components {
-  .container {
-    @apply mx-auto px-4 sm:px-6 lg:px-8;
+    @apply border-border;
   }
 }
