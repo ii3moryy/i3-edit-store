@@ -7,5 +7,9 @@ export default defineConfig({
   plugins: [react(), tailwindcss(), tsconfigPaths()],
   build: {
     outDir: "dist",
+    sourcemap: true,
+  },
+  server: {
+    open: true,
   },
 });
